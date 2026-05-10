@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>الكنترول المتكامل - النظام العادي والمرن (ثلاث قواعد)</title>
+
+    <!-- الخطوط والأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- المكتبات الخارجية -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <!-- الأنماط -->
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div class="container">
+
+    <!-- ════════════════════ الهيدر ════════════════════ -->
+    <div class="header">
+        <div class="logo-left">
+            <img src="logos/ministry-logo.png" alt="وزارة التعليم العالي" class="logo-img">
+        </div>
+        <div class="header-center">
+            <div class="header-decoration"><i class="fas fa-chalkboard-user"></i></div>
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                نظام الكنترول المتكامل
+                <i class="fas fa-university"></i>
+            </h1>
+            <div class="header-subtitle">
+                <i class="fas fa-landmark" style="color:#ffd966;"></i>
+                <span>المعهد العالي للعلوم الإدارية بالقطامية</span>
+                <i class="fas fa-laptop-code" style="color:#6cafcf;"></i>
+            </div>
+            <div class="header-badge">
+                <span><i class="fas fa-check-circle"></i> كنترول ذكي</span>
+                <span><i class="fas fa-shield-alt"></i> دقة عالية</span>
+                <span><i class="fas fa-chart-pie"></i> تحليلات فورية</span>
+            </div>
+        </div>
+        <div class="logo-right">
+            <img src="logos/institute-logo.png" alt="شعار المعهد" class="logo-img">
+        </div>
+    </div>
+
+    <!-- ════════════════════ التبويبات ════════════════════ -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="tab1"><i class="fas fa-chalkboard"></i> النظام العادي</button>
+        <button class="tab-btn"        data-tab="tab2"><i class="fas fa-feather-alt"></i> النظام المرن (3 قواعد)</button>
+        <button class="tab-btn"        data-tab="tab3"><i class="fas fa-chart-bar"></i> الإحصائيات (قبل/بعد)</button>
+        <button class="tab-btn"        data-tab="tab4"><i class="fas fa-cog"></i> الإعدادات ⚙️</button>
+    </div>
+
+    <!-- ════════════════════ تبويب 1: النظام العادي ════════════════════ -->
+    <div id="tab1" class="tab-pane active-pane">
+        <div class="card">
+            <h3><i class="fas fa-upload"></i> رفع بيانات النظام العادي</h3>
+            <div class="flex-row">
+                <div class="upload-box">
+                    <i class="fas fa-file-excel fa-2x"></i>
+                    <p>ملف الطلاب (كود، اسم، ميد، أعمال سنة، فاينل)</p>
+                    <input type="file" id="normalInput" accept=".xlsx, .xls, .csv">
+                </div>
+                <div class="upload-box">
+                    <i class="fas fa-user-check fa-2x"></i>
+                    <p>ملف الموافقة (أكواد الطلاب فقط)</p>
+                    <input type="file" id="approvalInput" accept=".xlsx, .xls, .csv">
+                </div>
+            </div>
+
+            <div class="config-panel">
+                <div class="inline-label">
+                    درجة النجاح:
+                    <input type="number" id="passGradeNormal" value="50" style="width:75px">
+                </div>
+                <div class="inline-label" style="margin-bottom:8px;">
+                    <input type="checkbox" id="raiseEnabledNormal" checked>
+                    <label for="raiseEnabledNormal" style="font-weight:600; cursor:pointer; margin-right:6px;">
+                        تفعيل رفع أعمال السنة للعتبة
+                    </label>
+                </div>
+                <div id="raiseOptionsNormal" style="transition: opacity 0.3s;">
+                    <div class="inline-label">
+                        ➕ الدرجة المضافة (عتبة الرفع):
+                        <input type="number" id="boostPoints" value="6" step="0.5" style="width:70px">
+                        <span class="tooltip-icon" title="العتبة = 50 - هذه القيمة. مثال: 10 يعني الرفع من مجموع 40">?</span>
+                    </div>
+                    <div class="inline-label" style="display:none;">
+                        <select id="raiseTypeNormal">
+                            <option value="gradual" selected>تدريجي</option>
+                            <option value="direct">مباشر</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="processNormalBtn">
+                    <i class="fas fa-play"></i> تطبيق النظام العادي
+                </button>
+            </div>
+
+            <div class="search-section">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="normalSearchInput" placeholder="بحث باسم الطالب أو الكود ...">
+                </div>
+                <div class="print-buttons">
+                    <button class="btn btn-print" id="printNormalBeneficiariesBtn">
+                        <i class="fas fa-print"></i> طباعة قائمة المستفيدين
+                    </button>
+                    <button class="btn btn-print" id="printNormalTableBtn">
+                        <i class="fas fa-print"></i> طباعة قائمة الطلاب
+                    </button>
+                </div>
+            </div>
+
+            <div id="normalMsg"></div>
+            <div id="normalTable"></div>
+            <div id="beneficiariesArea"></div>
+
+            <div class="download-sample">
+                <button class="btn btn-info" id="downloadSampleNormal">
+                    <i class="fas fa-download"></i> تحميل مثال ملف طلاب عادي
+                </button>
+                <button class="btn btn-info" id="downloadSampleApproval">
+                    <i class="fas fa-download"></i> تحميل مثال ملف موافقة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════ تبويب 2: النظام المرن ════════════════════ -->
+    <div id="tab2" class="tab-pane">
+        <div class="card">
+            <h3><i class="fas fa-leaf"></i> النظام المرن - اختر القاعدة</h3>
+
+            <div class="rule-selector">
+                <label><input type="radio" name="flexRule" value="old" checked>
+                    القاعدة 1: تحويل درجة النموذج</label>
+                <label><input type="radio" name="flexRule" value="add20">
+                    القاعدة 2: إضافة 20 لأعمال السنة (بحد أقصى 30)</label>
+                <label><input type="radio" name="flexRule" value="distribute35">
+                    القاعدة 3: توزيع 35 (ثابت أو تصاعدي حتى 50)</label>
+            </div>
+
+            <!-- منطقة رفع الملف تتغير حسب القاعدة -->
+            <div id="flexUploadArea"></div>
+
+            <!-- شرائح القاعدة 1 (تظهر فقط عند اختيار القاعدة 1) -->
+            <div id="flexExtraConfig" class="config-panel" style="display: none;">
+                <div id="bandsContainer" style="margin-bottom:12px;"></div>
+                <button class="btn btn-info" id="addBandBtn">+ إضافة شريحة</button>
+            </div>
+
+            <div class="config-panel">
+                <div class="inline-label">
+                    <input type="checkbox" id="flexRaiseCheckbox">
+                    تفعيل الرفع (44-49) (نفس إعدادات العادي)
+                </div>
+                <div class="inline-label">
+                    <input type="checkbox" id="flexApprovalCheckbox">
+                    تفعيل الموافقة (للقاعدتين 2 و 3 فقط)
+                </div>
+            </div>
+
+            <div id="flexApprovalUpload" style="display: none;">
+                <div class="upload-box">
+                    <i class="fas fa-user-check"></i>
+                    ملف الموافقة (أكواد فقط)
+                    <input type="file" id="flexApprovalFile" accept=".xlsx, .xls, .csv">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="processFlexBtn">
+                <i class="fas fa-cogs"></i> تطبيق النظام المرن
+            </button>
+
+            <div class="search-section">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="flexSearchInput" placeholder="بحث باسم الطالب أو الكود ...">
+                </div>
+                <div class="print-buttons">
+                    <button class="btn btn-print" id="printFlexBeneficiariesBtn">
+                        <i class="fas fa-print"></i> طباعة قائمة المستفيدين
+                    </button>
+                    <button class="btn btn-print" id="printFlexTableBtn">
+                        <i class="fas fa-print"></i> طباعة قائمة الطلاب
+                    </button>
+                             </div>
+            </div>
+
+            <div id="flexMsg"></div>
+            <div id="flexTable"></div>
+
+            <div class="download-sample">
+                <button class="btn btn-info" id="downloadSampleFlexOld">
+                    <i class="fas fa-download"></i> مثال ملف للقاعدة 1
+                </button>
+                <button class="btn btn-info" id="downloadSampleFlexAdd20">
+                    <i class="fas fa-download"></i> مثال ملف للقاعدة 2
+                </button>
+                <button class="btn btn-info" id="downloadSampleFlexDist35">
+                    <i class="fas fa-download"></i> مثال ملف للقاعدة 3
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════ تبويب 3: الإحصائيات ════════════════════ -->
+    <div id="tab3" class="tab-pane">
+        <div class="card">
+            <h3><i class="fas fa-chart-line"></i> مقارنة الإحصائيات قبل وبعد الرفع (على المجموع النهائي)</h3>
+            <div class="stats-grid" id="statsBefore"></div>
+            <div class="stats-grid" id="statsAfter"></div>
+            <div class="chart-wrapper">
+                <canvas id="compareChart" width="700" height="350"></canvas>
+            </div>
+            <div id="compareDetails"></div>
+        </div>
+    </div>
+
+    <!-- ════════════════════ تبويب 4: الإعدادات ════════════════════ -->
+    <div id="tab4" class="tab-pane">
+        <div class="card">
+
+            <!-- إعدادات النظام العادي -->
+            <h3><i class="fas fa-sliders-h"></i> إعدادات النظام العادي</h3>
+            <div class="config-panel">
+                <div class="setting-group">
+                  <div id="hiddenSettings" style="display: none;">
+    <div class="inline-label">🎯 درجة النجاح:
+        <input type="number" id="settingsPassNormal" value="50">
+    </div>
+    
+    <div class="inline-label">📈 الرفع المباشر من
+        <input type="number" id="settingsMinRaise" value="44" style="width:70px">
+        إلى
+        <input type="number" id="settingsMaxRaise" value="49" style="width:70px"> → 50
+    </div>
+    
+    <div class="inline-label">➕ الدرجة المضافة (تدريجي):
+        <input type="number" id="settingsBoostPoints" value="6" step="0.5" style="width:80px">
+    </div>
+</div>
+                    <div class="inline-label">🔧 معامل تحويل الفاينل للميد (للموافقة):
+                        <input type="number" id="settingsMidFactor" value="5" step="0.5">
+                    </div>
+                    <div class="inline-label">🔧 معامل تحويل الفاينل للأعمال (للموافقة):
+                        <input type="number" id="settingsActFactor" value="10" step="0.5">
+                    </div>
+                    <div class="inline-label">📏 حدود الميد الجديد: من
+                        <input type="number" id="settingsMidMin" value="10">
+                        إلى
+                        <input type="number" id="settingsMidMax" value="20">
+                    </div>
+                    <div class="inline-label">📏 حدود الأعمال الجديد: من
+                        <input type="number" id="settingsActMin" value="10">
+                        إلى
+                        <input type="number" id="settingsActMax" value="30">
+                    </div>
+                </div>
+                <button class="btn btn-info" id="applyNormalSettingsBtn">تطبيق إعدادات العادي</button>
+            </div>
+
+            <!-- إعدادات القاعدة 3 -->
+            <h3 style="margin-top:25px;">⭐ إعدادات القاعدة 3</h3>
+            <div class="config-panel">
+                <div class="setting-group">
+                    <div class="inline-label">
+                        <input type="checkbox" id="settingsIsProgressive"> تفعيل الوضع التصاعدي
+                    </div>
+                    <div class="inline-label">قيمة البداية: <input type="number" id="settingsBaseBonus" value="35" step="1"></div>
+                    <div class="inline-label">الزيادة لكل نقطة: <input type="number" id="settingsIncrement" value="1" step="0.5"></div>
+                    <div class="inline-label">الحد الأقصى: <input type="number" id="settingsMaxBonus" value="50" step="1"></div>
+                    <div class="inline-label">الحد الأدنى للفاينل: <input type="number" id="settingsMinFinalForBonus" value="15" step="1"></div>
+                    <div class="inline-label">نسبة الميد: <input type="number" id="settingsMidRatio" value="0.4" step="0.05"></div>
+                    <div class="inline-label">نسبة الأعمال: <input type="number" id="settingsActRatio" value="0.6" step="0.05"></div>
+                </div>
+                <button class="btn btn-info" id="applyDistributeSettingsBtn">تطبيق إعدادات القاعدة 3</button>
+            </div>
+
+            <!-- شرائح القاعدة 1 -->
+            <h3 style="margin-top:25px;"><i class="fas fa-cogs"></i> شرائح القاعدة 1</h3>
+            <div class="config-panel">
+                <div id="flexBandsSettingsContainer"></div>
+                <button class="btn btn-info" id="addBandSettingsBtn">+ إضافة شريحة</button>
+            </div>
+
+            <!-- إعدادات قاعدة H -->
+            <h3 style="margin-top:25px;">⭐ إعدادات قاعدة H (الإضافة إلى أعمال السنة)</h3>
+            <div class="config-panel">
+                <div class="setting-group">
+                    <div class="inline-label">
+                        <input type="checkbox" id="applyHEnabled">
+                        تفعيل قاعدة H (لغير طلاب الموافقة وغير الغائبين)
+                        <span class="tooltip-icon"
+                              title="تضاف إلى أعمال السنة وفق المعادلة: ROUNDUP(أعمال + H + (الفاينل/50)*H, 0) بحد أقصى 30">ⓘ</span>
+                    </div>
+                    <div class="inline-label">
+                        📈 قيمة H: <input type="number" id="hValue" value="6" step="0.5" style="width:80px">
+                        <span class="tooltip-icon" title="تضاف إلى أعمال السنة وتتضاعف بتأثير الفاينل">ⓘ</span>
+                    </div>
+                </div>
+                <button class="btn btn-info" id="applyHSettingsBtn">تطبيق إعدادات H</button>
+            </div>
+
+            <!-- إعدادات التقرير والطباعة -->
+            <h3 style="margin-top:25px;"><i class="fas fa-print"></i> إعدادات التقرير والطباعة</h3>
+            <div class="config-panel">
+                <div class="setting-group">
+                    <div class="inline-label">🏛️ اسم المعهد:
+                        <input type="text" id="settingsInstituteName"
+                               value="المعهد العالي للعلوم الإدارية بالقطامية" style="width:250px">
+                    </div>
+                    <div class="inline-label">📚 اسم البرنامج:
+                        <select id="settingsProgramName" style="width:180px">
+                            <option value="إدارة أعمال">إدارة أعمال</option>
+                            <option value="نظم معلومات الأعمال">نظم معلومات الأعمال</option>
+                            <option value="محاسبة">محاسبة</option>
+                            <option value="اقتصاد">اقتصاد</option>
+                        </select>
+                    </div>
+                    <div class="inline-label">📖 اسم المقرر:
+                        <input type="text" id="settingsCourseName"
+                               value="مهارات وطرق الاتصال" style="width:200px">
+                    </div>
+                </div>
+                <button class="btn btn-info" id="applyReportSettingsBtn">تطبيق إعدادات التقرير</button>
+            </div>
+
+            <hr>
+
+            <!-- حفظ واستعادة -->
+            <h3><i class="fas fa-database"></i> حفظ واستعادة الإعدادات</h3>
+            <button class="btn btn-info" id="saveAllSettingsBtn">
+                <i class="fas fa-save"></i> حفظ الإعدادات (JSON)
+            </button>
+            <button class="btn btn-primary" id="loadAllSettingsBtn">
+                <i class="fas fa-folder-open"></i> استعادة إعدادات
+            </button>
+            <input type="file" id="restoreSettingsFile" style="display:none" accept=".json">
+
+            <hr>
+
+            <!-- تصدير CSV -->
+            <h3><i class="fas fa-download"></i> تصدير النتيجة (CSV)</h3>
+            <p>أربعة أعمدة فقط: الكود، الميد، الأعمال، الفاينل (بدون عمود المجموع). أول صف 1,1,1,1</p>
+            <button class="btn btn-success" id="exportCSVBtn">
+                <i class="fas fa-file-csv"></i> تنزيل CSV
+            </button>
+
+        </div>
+    </div>
+
+    <!-- ════════════════════ الفوتر ════════════════════ -->
+    <div class="footer-bar">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <i class="fas fa-university"></i>
+                <span>نظام الكنترول المتكامل</span>
+                <span class="version">v2.2.0</span>
+            </div>
+            <div class="footer-copyright">
+                <i class="fas fa-copyright"></i>
+                <span>2026 جميع الحقوق محفوظة - د. محمد المتولى سليم</span>
+            </div>
+            <div class="footer-powered">
+                <i class="fas fa-heart" style="color: #ff6b6b;"></i>
+                <span>كنترول ذكي بتقنية متقدمة</span>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<!-- ════════════ ملفات JavaScript (بالترتيب) ════════════ -->
+<script src="js/settings.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/table.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/normalSystem.js"></script>
+<script src="js/flexSystem.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
