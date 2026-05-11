@@ -114,19 +114,12 @@
                     <button class="btn btn-print" id="printNormalTableBtn">
                         <i class="fas fa-print"></i> طباعة قائمة الطلاب
                     </button>
-                    <button class="btn btn-success" id="exportNormalCSVBtn">
-                        <i class="fas fa-file-csv"></i> تنزيل CSV
-                    </button>
-                    <button class="btn btn-success" id="exportNormalAbsentBtn">
-                        <i class="fas fa-file-excel"></i> تنزيل قائمة الغياب
-                    </button>
                 </div>
             </div>
 
             <div id="normalMsg"></div>
-            <div id="normalAbsentArea"></div>
-            <div id="beneficiariesArea"></div>
             <div id="normalTable"></div>
+            <div id="beneficiariesArea"></div>
 
             <div class="download-sample">
                 <button class="btn btn-info" id="downloadSampleNormal">
@@ -197,17 +190,10 @@
                     <button class="btn btn-print" id="printFlexTableBtn">
                         <i class="fas fa-print"></i> طباعة قائمة الطلاب
                     </button>
-                    <button class="btn btn-success" id="exportFlexCSVBtn">
-                        <i class="fas fa-file-csv"></i> تنزيل CSV
-                    </button>
-                    <button class="btn btn-success" id="exportFlexAbsentBtn">
-                        <i class="fas fa-file-excel"></i> تنزيل قائمة الغياب
-                    </button>
-                </div>
+                             </div>
             </div>
 
             <div id="flexMsg"></div>
-            <div id="flexAbsentArea"></div>
             <div id="flexTable"></div>
 
             <div class="download-sample">
@@ -317,6 +303,20 @@
                     <div class="inline-label">
                         📈 قيمة H: <input type="number" id="hValue" value="6" step="0.5" style="width:80px">
                         <span class="tooltip-icon" title="تضاف إلى أعمال السنة وتتضاعف بتأثير الفاينل">ⓘ</span>
+                    </div>
+                </div>
+                <hr>
+                <div style="margin-bottom:8px; font-weight:600;">🚫 استثناء من رفع الأعمال — الطلاب أقل من أو يساوي:</div>
+                <div class="setting-group">
+                    <div class="inline-label">
+                        عتبة الميد:
+                        <input type="number" id="midThreshold" value="0" min="0" max="20" style="width:80px">
+                        <span class="tooltip-icon" title="لو ميد الطالب <= هذه القيمة وأعماله <= عتبة الأعمال → لا يستفيد من رفع الأعمال">ⓘ</span>
+                    </div>
+                    <div class="inline-label">
+                        عتبة الأعمال:
+                        <input type="number" id="actThreshold" value="0" min="0" max="30" style="width:80px">
+                        <span class="tooltip-icon" title="لو أعمال الطالب <= هذه القيمة وميده <= عتبة الميد → لا يستفيد من رفع الأعمال">ⓘ</span>
                     </div>
                 </div>
                 <button class="btn btn-info" id="applyHSettingsBtn">تطبيق إعدادات H</button>
