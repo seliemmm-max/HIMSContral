@@ -118,8 +118,9 @@
             </div>
 
             <div id="normalMsg"></div>
-            <div id="normalTable"></div>
+            <div id="normalAbsentArea"></div>
             <div id="beneficiariesArea"></div>
+            <div id="normalTable"></div>
 
             <div class="download-sample">
                 <button class="btn btn-info" id="downloadSampleNormal">
@@ -231,21 +232,17 @@
             <h3><i class="fas fa-sliders-h"></i> إعدادات النظام العادي</h3>
             <div class="config-panel">
                 <div class="setting-group">
-                  <div id="hiddenSettings" style="display: none;">
-    <div class="inline-label">🎯 درجة النجاح:
-        <input type="number" id="settingsPassNormal" value="50">
-    </div>
-    
-    <div class="inline-label">📈 الرفع المباشر من
-        <input type="number" id="settingsMinRaise" value="44" style="width:70px">
-        إلى
-        <input type="number" id="settingsMaxRaise" value="49" style="width:70px"> → 50
-    </div>
-    
-    <div class="inline-label">➕ الدرجة المضافة (تدريجي):
-        <input type="number" id="settingsBoostPoints" value="6" step="0.5" style="width:80px">
-    </div>
-</div>
+                    <div class="inline-label">🎯 درجة النجاح:
+                        <input type="number" id="settingsPassNormal" value="50">
+                    </div>
+                    <div class="inline-label">📈 الرفع المباشر من
+                        <input type="number" id="settingsMinRaise" value="44" style="width:70px">
+                        إلى
+                        <input type="number" id="settingsMaxRaise" value="49" style="width:70px"> → 50
+                    </div>
+                    <div class="inline-label">➕ الدرجة المضافة (تدريجي):
+                        <input type="number" id="settingsBoostPoints" value="6" step="0.5" style="width:80px">
+                    </div>
                     <div class="inline-label">🔧 معامل تحويل الفاينل للميد (للموافقة):
                         <input type="number" id="settingsMidFactor" value="5" step="0.5">
                     </div>
