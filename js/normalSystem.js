@@ -1,9 +1,6 @@
 /* ========================================
    js/normalSystem.js
-   النظام العادي - 3 مسارات:
-   1) غائب         → تسجيل فقط
-   2) موافقة        → تعديل ميد+أعمال بالمعاملات
-   3) باقي الطلاب  → قاعدة H + رفع أعمال للعتبة
+   النظام العادي - 3 مسارات
    ======================================== */
 
 let normalRowsRaw = [];
@@ -12,7 +9,6 @@ let beneficiaries = [];
 
 function initNormalSystem() {
 
-    // رفع ملف الطلاب
     document.getElementById('normalInput')?.addEventListener('change', async e => {
         if (!e.target.files.length) return;
         clearProcessedData();
@@ -22,7 +18,6 @@ function initNormalSystem() {
         renderAbsentBox('normalAbsentArea', extractAbsentRows(normalRowsRaw), 'عادي');
     });
 
-    // رفع ملف الموافقة
     document.getElementById('approvalInput')?.addEventListener('change', async e => {
         if (!e.target.files.length) return;
         clearProcessedData();
@@ -37,7 +32,7 @@ function initNormalSystem() {
             `<div class="alert-info">📋 تم تحميل ${approvalSet.size} كود موافقة</div>`;
     });
 
-    // checkbox تفعيل/تعطيل رفع الأعمال
+    // checkbox رفع الأعمال
     const raiseChk  = document.getElementById('raiseEnabledNormal');
     const raiseOpts = document.getElementById('raiseOptionsNormal');
     function updateRaiseUI() {
@@ -49,7 +44,6 @@ function initNormalSystem() {
     raiseChk?.addEventListener('change', () => { saveAllSettings(); updateRaiseUI(); });
     updateRaiseUI();
 
-    // زر التطبيق
     document.getElementById('processNormalBtn')?.addEventListener('click', processNormal);
 }
 
@@ -74,10 +68,14 @@ async function processNormal() {
     if (idxAct   === -1) idxAct   = 3;
     if (idxFinal === -1) idxFinal = 4;
 
-    const results  = [];
-    const statRows = [];
-    beneficiaries  = [];
-    const raiseEnabled = document.getElementById('raiseEnabledNormal')?.checked !== false;
+    const results    = [];
+    const beforeRows = [];  // قبل رفع الأعمال
+    const afterRows  = [];  // بعد رفع الأعمال
+    beneficiaries    = [];
+
+    const raiseEnabled    = document.getElementById('raiseEnabledNormal')?.checked !== false;
+    const midThreshold    = normalSettings.midThreshold ?? 0;
+    const actThreshold    = normalSettings.actThreshold ?? 0;
 
     for (let i = 1; i < normalRowsRaw.length; i++) {
         const row  = normalRowsRaw[i];
@@ -96,25 +94,37 @@ async function processNormal() {
         /* ══ مسار 1: غائب ══ */
         if (mid < 0 || act < 0 || finalOrig < 0) {
             const total = Math.min(mid, act, finalOrig);
-            statRows.push(total);
-            results.push({ code, name, mid, act, finalOriginal: finalOrig,
+            beforeRows.push(total);
+            afterRows.push(total);
+            results.push({ code, name, mid, act,
+                           finalOriginal: finalOrig,
                            finalComputed: total, actBoosted: false });
             continue;
         }
 
-        /* ══ مسار 2: موافقة ══ */
+        /* ══ مسار 2: موافقة — قارن الأصلي بالمعامل وخذ الأكبر ══ */
         if (isApproved) {
             const oldMid = mid, oldAct = act;
-            const newMid = 15 + (finalOrig / 50) * normalSettings.midFactor;
-            const newAct = 20 + (finalOrig / 50) * normalSettings.actFactor;
-            mid = Math.min(normalSettings.midMax, Math.max(normalSettings.midMin, newMid));
-            act = Math.min(normalSettings.actMax, Math.max(normalSettings.actMin, newAct));
-            beneficiaries.push({ code, name, oldMid, oldAct, newMid: mid, newAct: act });
-            const total = Math.ceil(mid) + Math.ceil(act) + finalOrig;
-            statRows.push(total);
+            const fmid   = 15 + (finalOrig / 50) * normalSettings.midFactor;
+            const fact   = 20 + (finalOrig / 50) * normalSettings.actFactor;
+            // الأكبر بين الأصلي والمعامل
+            let newMid = Math.max(mid, fmid);
+            let newAct = Math.max(act, fact);
+            // تطبيق الحدود
+            newMid = Math.min(normalSettings.midMax, Math.max(normalSettings.midMin, newMid));
+            newAct = Math.min(normalSettings.actMax, Math.max(normalSettings.actMin, newAct));
+
+            beneficiaries.push({ code, name, oldMid, oldAct,
+                                  newMid, newAct,
+                                  byFormulaMid: fmid, byFormulaAct: fact });
+
+            const total = Math.ceil(newMid) + Math.ceil(newAct) + finalOrig;
+            beforeRows.push(total);
+            afterRows.push(total);
             results.push({ code, name,
-                           mid: Math.ceil(mid), act: Math.ceil(act),
-                           finalOriginal: finalOrig, finalComputed: total, actBoosted: false });
+                           mid: Math.ceil(newMid), act: Math.ceil(newAct),
+                           finalOriginal: finalOrig,
+                           finalComputed: total, actBoosted: false });
             continue;
         }
 
@@ -130,8 +140,16 @@ async function processNormal() {
             if (finalAct < 0)  finalAct = 0;
         }
 
-        // ب) رفع أعمال السنة — فاينل >= 15 والمجموع في العتبة
-        if (raiseEnabled && normalSettings.applyHEnabled && finalOrig >= 15) {
+        // سجّل المجموع قبل رفع الأعمال
+        const totalBefore = mid + finalAct + finalOrig;
+        beforeRows.push(totalBefore);
+
+        // ب) رفع الأعمال بالشروط الكاملة
+        if (raiseEnabled &&
+            normalSettings.applyHEnabled &&
+            finalOrig >= 15 &&
+            !(mid <= midThreshold && act <= actThreshold))  // ← الشرط الجديد
+        {
             const threshold   = normalSettings.passGrade - normalSettings.boostPoints;
             const totalAfterH = mid + finalAct + finalOrig;
             if (totalAfterH >= threshold) {
@@ -144,44 +162,56 @@ async function processNormal() {
             }
         }
 
-        const total = mid + finalAct + finalOrig;
-        statRows.push(total);
+        const totalAfter = mid + finalAct + finalOrig;
+        afterRows.push(totalAfter);
         results.push({ code, name, mid, act: finalAct,
-                       finalOriginal: finalOrig, finalComputed: total, actBoosted });
+                       finalOriginal: finalOrig,
+                       finalComputed: totalAfter, actBoosted });
     }
 
     if (!results.length) {
         document.getElementById('normalMsg').innerHTML = `
             <div class="alert-info" style="border-color:#c0392b; background:#ffeaea;">
                 ⚠️ لم يتم العثور على بيانات صالحة!<br>
-                • أن الصف الأول هو الهيدر (كود، اسم، ميد، أعمال، فاينل)<br>
-                • أن الأكواد أرقام وليست فارغة
+                • تأكد أن الصف الأول هو الهيدر (كود، اسم، ميد، أعمال، فاينل)
             </div>`;
         return;
     }
 
     processedData      = results;
     currentSys         = 'normal';
-    rawBeforeRaiseData = results.map(s => ({ totalBefore: s.finalComputed }));
+    rawBeforeRaiseData = beforeRows.map(v => ({ totalBefore: v }));
 
     displayTable(results, 'normalTable');
-    updateCompareStats(statRows, statRows);
+
+    // الإحصائيات: قبل رفع الأعمال vs بعد رفع الأعمال
+    updateCompareStats(beforeRows, afterRows);
 
     // المستفيدون من الموافقة
     let benefHtml = '';
     if (beneficiaries.length) {
         benefHtml = `
             <div class="alert-info">
-                <strong>المستفيدون من الموافقة (تم تعديل الميد/الأعمال)</strong>
+                <strong>المستفيدون من الموافقة</strong>
                 <div class="beneficiary-list">
                     <table>
-                        <thead><tr><th>الكود</th><th>الاسم</th><th>ميد قديم</th><th>ميد جديد</th><th>أعمال قديم</th><th>أعمال جديد</th></tr></thead>
+                        <thead>
+                            <tr>
+                                <th>الكود</th><th>الاسم</th>
+                                <th>ميد أصلي</th><th>ميد بالمعامل</th><th>ميد نهائي</th>
+                                <th>أعمال أصلي</th><th>أعمال بالمعامل</th><th>أعمال نهائية</th>
+                            </tr>
+                        </thead>
                         <tbody>
                             ${beneficiaries.map(b => `
                                 <tr>
                                     <td>${b.code}</td><td>${b.name}</td>
-                                    <td>${b.oldMid}</td><td>${b.newMid.toFixed(1)}</td>
-                                    <td>${b.oldAct}</td><td>${b.newAct.toFixed(1)}</td>
+                                    <td>${b.oldMid}</td>
+                                    <td>${b.byFormulaMid.toFixed(1)}</td>
+                                    <td><strong>${b.newMid.toFixed(1)}</strong></td>
+                                    <td>${b.oldAct}</td>
+                                    <td>${b.byFormulaAct.toFixed(1)}</td>
+                                    <td><strong>${b.newAct.toFixed(1)}</strong></td>
                                 </tr>`).join('')}
                         </tbody>
                     </table>
@@ -198,7 +228,9 @@ async function processNormal() {
             ✔ معالجة ${results.length} طالب |
             موافقة: ${beneficiaries.length} |
             مستفيدون من رفع الأعمال: ${boostedCount} ⭐ |
-            قاعدة H: ${normalSettings.applyHEnabled ? `مطبقة (ثابت ${normalSettings.hValue})` : 'معطلة'}
+            قاعدة H: ${normalSettings.applyHEnabled
+                ? `مطبقة (ثابت ${normalSettings.hValue})`
+                : 'معطلة'}
         </div>`;
 
     setupPrintBeneficiaries('printNormalBeneficiariesBtn', 'beneficiariesArea');
@@ -217,7 +249,7 @@ function extractAbsentRows(rawRows) {
         if (c.includes('كود') || c === 'code') idxCode  = i;
         if (c.includes('اسم'))                  idxName  = i;
         if (c.includes('ميد'))                  idxMid   = i;
-        if (c.includes('اعمال') || c.includes('أعمال')) idxAct = i;
+        if (c.includes('اعمال') || c.includes('أعمال')) idxAct   = i;
         if (c.includes('فاينل') || c.includes('final')) idxFinal = i;
     }
     const absent = [];
@@ -231,8 +263,8 @@ function extractAbsentRows(rawRows) {
         const reasons = [];
         vals.forEach((v, idx) => {
             const s = String(v || '').trim();
-            if (s === 'غ' || s === 'غـ')              reasons.push(`${labels[idx]}: غائب`);
-            if (s === 'إلغاء' || s === 'الغاء')        reasons.push(`${labels[idx]}: إلغاء`);
+            if (s === 'غ' || s === 'غـ')           reasons.push(`${labels[idx]}: غائب`);
+            if (s === 'إلغاء' || s === 'الغاء')    reasons.push(`${labels[idx]}: إلغاء`);
         });
         if (reasons.length) absent.push({ code, name, reason: reasons.join(' | ') });
     }
@@ -247,7 +279,8 @@ function renderAbsentBox(containerId, absent, sysLabel) {
         return;
     }
     const rows = absent.map(s =>
-        `<tr><td>${s.code}</td><td>${s.name}</td><td style="color:#c0392b;font-weight:bold;">${s.reason}</td></tr>`
+        `<tr><td>${s.code}</td><td>${s.name}</td>
+         <td style="color:#c0392b;font-weight:bold;">${s.reason}</td></tr>`
     ).join('');
     el.innerHTML = `
         <div class="alert-info" style="border-color:#e74c3c; background:#fff5f5;">
