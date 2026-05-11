@@ -47,7 +47,7 @@ function displayTable(data, elementId) {
                 <td>${fmt(s.mid)}</td>
                 <td>${fmt(s.act)}</td>
                 <td>${fmt(s.finalOriginal)}</td>
-                <td class="${totalCellClass}">${totalDisplay} ${s.actBoosted ? '<span title="تم رفع أعمال السنة">⭐</span>' : ''}</td>
+                <td class="${totalCellClass}">${totalDisplay}${s.actBoosted ? ' <span title="تم رفع أعمال السنة">⭐</span>' : ''}</td>
             </tr>`;
     });
 
@@ -145,6 +145,71 @@ function setupPrintBeneficiaries(btnId, beneficiariesAreaId) {
         if (!div || !div.querySelector('table')) { alert('لا توجد بيانات مستفيدين للطباعة'); return; }
         printDirect(div.querySelector('table').outerHTML, 'قائمة المستفيدين من الموافقة');
     });
+}
+
+/**
+ * تصدير شيت Excel لطلاب الغياب والإلغاء
+ * يُصدَّر من processedData الحالية (عادي أو مرن)
+ * @param {string} systemLabel - اسم النظام للملف (عادي / مرن)
+ */
+function exportAbsentStudents(systemLabel) {
+    if (!processedData || !processedData.length) {
+        alert('لا توجد بيانات معالجة — يرجى تطبيق النظام أولاً');
+        return;
+    }
+
+    // تصفية طلاب الغياب والإلغاء (أي قيمة سالبة في mid أو act أو finalOriginal)
+    const absentRows = processedData.filter(s =>
+        s.mid < 0 || s.act < 0 || s.finalOriginal < 0
+    );
+
+    if (!absentRows.length) {
+        alert('✅ لا يوجد طلاب غياب أو إلغاء في البيانات الحالية');
+        return;
+    }
+
+    // بناء صفوف الشيت
+    const sheetData = [
+        ['م', 'كود الطالب', 'الاسم', 'الميد ترم', 'أعمال السنة', 'الفاينل', 'السبب']
+    ];
+
+    absentRows.forEach((s, idx) => {
+        const getReason = (val) => {
+            if (val === -3) return 'غائب (غ)';
+            if (val === -8) return 'إلغاء';
+            return '';
+        };
+        // نجمع أسباب كل الخانات السالبة
+        const reasons = [];
+        if (s.mid < 0)          reasons.push(`ميد: ${getReason(s.mid)}`);
+        if (s.act < 0)          reasons.push(`أعمال: ${getReason(s.act)}`);
+        if (s.finalOriginal < 0) reasons.push(`فاينل: ${getReason(s.finalOriginal)}`);
+
+        const displayVal = v => v < 0 ? (v === -3 ? 'غ' : 'إلغاء') : v;
+
+        sheetData.push([
+            idx + 1,
+            s.code,
+            s.name || '',
+            displayVal(s.mid),
+            displayVal(s.act),
+            displayVal(s.finalOriginal),
+            reasons.join(' | ')
+        ]);
+    });
+
+    // إنشاء الشيت مع تنسيق
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+    // ضبط عرض الأعمدة
+    ws['!cols'] = [
+        { wch: 5 }, { wch: 12 }, { wch: 25 },
+        { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 30 }
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'طلاب الغياب');
+    XLSX.writeFile(wb, `طلاب_الغياب_${systemLabel}_${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.xlsx`);
 }
 
 /** طباعة الجدول الكامل */
