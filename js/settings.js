@@ -13,7 +13,9 @@ let normalSettings = {
     midMin: 10, midMax: 20,
     actMin: 10, actMax: 30,
     applyHEnabled: true,
-    hValue: 6
+    hValue: 6,
+    midThreshold: 0,
+    actThreshold: 0
 };
 
 let distributeSettings = {
@@ -28,9 +30,8 @@ let flexBands = [
     { min: 26, max: 100, midVal: 15, actVal: 25 }
 ];
 
-let flexRaiseEnabled    = false;
-let flexApprovalEnabled  = false;
-let normalRaiseEnabled   = true;
+let flexRaiseEnabled   = false;
+let flexApprovalEnabled = false;
 
 let reportSettings = {
     programName:   "إدارة أعمال",
@@ -47,7 +48,7 @@ function saveAllSettings() {
     };
     const toStore = {
         normalSettings, distributeSettings, flexBands,
-        flexRaiseEnabled, flexApprovalEnabled, normalRaiseEnabled, reportSettings
+        flexRaiseEnabled, flexApprovalEnabled, reportSettings
     };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(toStore));
 }
@@ -63,7 +64,6 @@ function loadAllSettings() {
             if (obj.flexBands)            flexBands            = obj.flexBands;
             if (obj.flexRaiseEnabled    !== undefined) flexRaiseEnabled    = obj.flexRaiseEnabled;
             if (obj.flexApprovalEnabled !== undefined) flexApprovalEnabled = obj.flexApprovalEnabled;
-            if (obj.normalRaiseEnabled  !== undefined) normalRaiseEnabled  = obj.normalRaiseEnabled;
             if (obj.reportSettings)       reportSettings       = { ...reportSettings,       ...obj.reportSettings };
         } catch (e) {}
     }
@@ -93,8 +93,6 @@ function loadAllSettings() {
     document.getElementById('settingsActRatio').value        = distributeSettings.actRatio;
 
     document.getElementById('flexRaiseCheckbox').checked     = flexRaiseEnabled;
-    const nrc = document.getElementById('raiseEnabledNormal');
-    if (nrc) { nrc.checked = normalRaiseEnabled; nrc.dispatchEvent(new Event('change')); }
     document.getElementById('flexApprovalCheckbox').checked  = flexApprovalEnabled;
 
     document.getElementById('settingsInstituteName').value   = reportSettings.instituteName;
@@ -103,6 +101,8 @@ function loadAllSettings() {
 
     document.getElementById('applyHEnabled').checked         = normalSettings.applyHEnabled;
     document.getElementById('hValue').value                  = normalSettings.hValue;
+    document.getElementById('midThreshold').value            = normalSettings.midThreshold ?? 0;
+    document.getElementById('actThreshold').value            = normalSettings.actThreshold ?? 0;
 
     renderFlexBandsUI('bandsContainer',              flexBands, true);
     renderFlexBandsUI('flexBandsSettingsContainer',  flexBands, false);
@@ -138,8 +138,10 @@ function syncNormalFromUI(source) {
 }
 
 function syncHSettingsFromUI() {
-    normalSettings.applyHEnabled = document.getElementById('applyHEnabled').checked;
-    normalSettings.hValue = parseFloat(document.getElementById('hValue').value) || 0;
+    normalSettings.applyHEnabled  = document.getElementById('applyHEnabled').checked;
+    normalSettings.hValue         = parseFloat(document.getElementById('hValue').value)        || 0;
+    normalSettings.midThreshold   = parseFloat(document.getElementById('midThreshold').value)  ?? 0;
+    normalSettings.actThreshold   = parseFloat(document.getElementById('actThreshold').value)  ?? 0;
     saveAllSettings();
 }
 
@@ -225,7 +227,7 @@ function initSettingsEvents() {
 
     // حفظ/استعادة JSON
     document.getElementById('saveAllSettingsBtn')?.addEventListener('click', () => {
-        const all = { normalSettings, distributeSettings, flexBands, flexRaiseEnabled, flexApprovalEnabled, normalRaiseEnabled, reportSettings };
+        const all = { normalSettings, distributeSettings, flexBands, flexRaiseEnabled, flexApprovalEnabled, reportSettings };
         const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -247,7 +249,6 @@ function initSettingsEvents() {
                 if (loaded.flexBands)            flexBands            = loaded.flexBands;
                 if (loaded.flexRaiseEnabled    !== undefined) flexRaiseEnabled    = loaded.flexRaiseEnabled;
                 if (loaded.flexApprovalEnabled !== undefined) flexApprovalEnabled = loaded.flexApprovalEnabled;
-                if (loaded.normalRaiseEnabled  !== undefined) normalRaiseEnabled  = loaded.normalRaiseEnabled;
                 if (loaded.reportSettings)       reportSettings       = { ...reportSettings,       ...loaded.reportSettings };
                 saveAllSettings();
                 loadAllSettings();
