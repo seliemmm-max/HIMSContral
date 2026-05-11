@@ -19,7 +19,7 @@ Chart.defaults.set('plugins.datalabels', {
 function initExportCSV() {
     function doExport() {
         if (!processedData.length) { alert('لا توجد بيانات معالجة'); return; }
-        const rows = [['كود', 'ميد', 'أعمال', 'فاينل']];
+       const rows = [['1', '1', '1', '1']];
         for (const s of processedData)
             rows.push([
                 s.code,
