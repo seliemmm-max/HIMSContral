@@ -19,7 +19,7 @@ Chart.defaults.set('plugins.datalabels', {
 function initExportCSV() {
     function doExport() {
         if (!processedData.length) { alert('لا توجد بيانات معالجة'); return; }
-        const rows = [['كود', 'ميد', 'اعمال', 'فاينل']];
+        const rows = [['كود', 'ميد', 'أعمال', 'فاينل']];
         for (const s of processedData)
             rows.push([
                 s.code,
@@ -30,11 +30,19 @@ function initExportCSV() {
         const ws = XLSX.utils.aoa_to_sheet(rows);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Result');
-        XLSX.writeFile(wb, 'نتيجة_' + currentSys + '.csv', { bookType: 'csv', type: 'buffer' });
+        XLSX.writeFile(wb, `نتيجة_${currentSys}.csv`, { bookType: 'csv', type: 'buffer' });
     }
     document.getElementById('exportCSVBtn')      ?.addEventListener('click', doExport);
     document.getElementById('exportNormalCSVBtn')?.addEventListener('click', doExport);
     document.getElementById('exportFlexCSVBtn')  ?.addEventListener('click', doExport);
+
+    // أزرار تنزيل قائمة الغياب
+    document.getElementById('exportNormalAbsentBtn')?.addEventListener('click', () =>
+        exportAbsentStudents('النظام_العادي')
+    );
+    document.getElementById('exportFlexAbsentBtn')?.addEventListener('click', () =>
+        exportAbsentStudents('النظام_المرن')
+    );
 }
 
 // ---- نظام التبويبات ----
