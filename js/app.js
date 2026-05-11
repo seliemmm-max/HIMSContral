@@ -19,28 +19,22 @@ Chart.defaults.set('plugins.datalabels', {
 function initExportCSV() {
     function doExport() {
         if (!processedData.length) { alert('لا توجد بيانات معالجة'); return; }
-        const rows = [['1', '1', '1', '1']];
+        const rows = [['كود', 'ميد', 'اعمال', 'فاينل']];
         for (const s of processedData)
-            rows.push([s.code, s.mid, s.act, s.finalOriginal]);
+            rows.push([
+                s.code,
+                Math.ceil(s.mid),
+                Math.ceil(s.act),
+                Math.ceil(s.finalOriginal)
+            ]);
         const ws = XLSX.utils.aoa_to_sheet(rows);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Result');
-        XLSX.writeFile(wb, `نتيجة_${currentSys}.csv`, { bookType: 'csv', type: 'buffer' });
+        XLSX.writeFile(wb, 'نتيجة_' + currentSys + '.csv', { bookType: 'csv', type: 'buffer' });
     }
-    // الزر القديم في تبويب الإعدادات
-    document.getElementById('exportCSVBtn')?.addEventListener('click', doExport);
-    // زر النظام العادي
+    document.getElementById('exportCSVBtn')      ?.addEventListener('click', doExport);
     document.getElementById('exportNormalCSVBtn')?.addEventListener('click', doExport);
-    // زر النظام المرن
-    document.getElementById('exportFlexCSVBtn')?.addEventListener('click', doExport);
-
-    // ── أزرار تنزيل شيت الغياب ──
-    document.getElementById('exportNormalAbsentBtn')?.addEventListener('click', () =>
-        exportAbsentStudents('النظام_العادي')
-    );
-    document.getElementById('exportFlexAbsentBtn')?.addEventListener('click', () =>
-        exportAbsentStudents('النظام_المرن')
-    );
+    document.getElementById('exportFlexCSVBtn')  ?.addEventListener('click', doExport);
 }
 
 // ---- نظام التبويبات ----
