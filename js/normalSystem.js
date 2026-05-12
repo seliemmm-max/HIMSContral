@@ -131,8 +131,11 @@ async function processNormal() {
         /* ══ مسار 3: باقي الطلاب ══ */
         let finalAct = act;
 
-        // أ) قاعدة H
-        if (normalSettings.applyHEnabled) {
+        // فحص العتبة — الطالب أقل من أو يساوي العتبة لا يستفيد من H ولا من رفع الأعمال
+        const belowThreshold = (mid <= midThreshold && act <= actThreshold);
+
+        // أ) قاعدة H — لا تطبق لو تحت العتبة
+        if (normalSettings.applyHEnabled && !belowThreshold) {
             const variable = 10 - normalSettings.hValue;
             const added    = act + normalSettings.hValue + (finalOrig / 50) * variable;
             finalAct = Math.ceil(added);
@@ -144,11 +147,11 @@ async function processNormal() {
         const totalBefore = mid + finalAct + finalOrig;
         beforeRows.push(totalBefore);
 
-        // ب) رفع الأعمال بالشروط الكاملة
+        // ب) رفع الأعمال — لا تطبق لو تحت العتبة
         if (raiseEnabled &&
             normalSettings.applyHEnabled &&
-            finalOrig >= 15 &&
-            !(mid <= midThreshold && act <= actThreshold))  // ← الشرط الجديد
+            !belowThreshold &&
+            finalOrig >= 15)
         {
             const threshold   = normalSettings.passGrade - normalSettings.boostPoints;
             const totalAfterH = mid + finalAct + finalOrig;
