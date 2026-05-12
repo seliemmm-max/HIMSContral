@@ -134,8 +134,8 @@ async function processNormal() {
         // فحص العتبة — الطالب أقل من أو يساوي العتبة لا يستفيد من H ولا من رفع الأعمال
         const belowThreshold = (mid <= midThreshold && act <= actThreshold);
 
-        // أ) قاعدة H — لا تطبق لو تحت العتبة
-        if (normalSettings.applyHEnabled && !belowThreshold) {
+        // أ) قاعدة H — لا تطبق لو تحت العتبة أو فاينل < 15
+        if (normalSettings.applyHEnabled && !belowThreshold && finalOrig >= 15) {
             const variable = 10 - normalSettings.hValue;
             const added    = act + normalSettings.hValue + (finalOrig / 50) * variable;
             finalAct = Math.ceil(added);
